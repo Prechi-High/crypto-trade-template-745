@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { Command, Menu } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Link, useLocation } from "react-router-dom";
 
 const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,35 +57,51 @@ const Navigation = () => {
     >
       <div className="mx-auto h-full px-6">
         <nav className="flex items-center justify-between h-full">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <Command className="w-5 h-5 text-primary" />
             <span className="font-bold text-base">CryptoTrade</span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (item.onClick) {
-                    item.onClick();
-                  }
-                }}
-                className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300"
-              >
-                {item.name}
-              </a>
-            ))}
-            <Button 
-              onClick={() => scrollToSection('cta')}
-              size="sm"
-              className="button-gradient"
-            >
-              Start Trading
-            </Button>
+            {location.pathname === '/' ? (
+              <>
+                {navItems.map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (item.onClick) {
+                        item.onClick();
+                      }
+                    }}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300"
+                  >
+                    {item.name}
+                  </a>
+                ))}
+                <Button 
+                  onClick={() => scrollToSection('cta')}
+                  size="sm"
+                  className="button-gradient"
+                >
+                  Start Trading
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300">
+                  Home
+                </Link>
+                <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300">
+                  Dashboard
+                </Link>
+                <Button size="sm" className="button-gradient">
+                  <Link to="/dashboard">View Dashboard</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Navigation */}
