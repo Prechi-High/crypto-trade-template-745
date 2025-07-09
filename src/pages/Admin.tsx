@@ -15,6 +15,7 @@ interface UserProfile {
   id: string;
   full_name: string;
   email: string;
+  username: string;
   share_token: string;
   created_at: string;
   user_financials: {
@@ -34,6 +35,7 @@ const Admin = () => {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    username: "",
     password: "",
     totalBalance: "",
     investedAmount: "",
@@ -86,6 +88,7 @@ const Admin = () => {
           email: formData.email,
           password: formData.password,
           fullName: formData.fullName,
+          username: formData.username,
           totalBalance: formData.totalBalance,
           investedAmount: formData.investedAmount,
           profitAmount: formData.profitAmount,
@@ -106,6 +109,7 @@ const Admin = () => {
       setFormData({
         fullName: "",
         email: "",
+        username: "",
         password: "",
         totalBalance: "",
         investedAmount: "",
@@ -163,6 +167,7 @@ const Admin = () => {
     setFormData({
       fullName: user.full_name,
       email: user.email,
+      username: user.username || "",
       password: "",
       totalBalance: financials.total_balance.toString(),
       investedAmount: financials.invested_amount.toString(),
@@ -233,6 +238,14 @@ const Admin = () => {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                      className="glass"
+                    />
+                  </div>
+                  <div>
+                    <Label>Username</Label>
+                    <Input
+                      value={formData.username}
+                      onChange={(e) => setFormData(prev => ({...prev, username: e.target.value}))}
                       className="glass"
                     />
                   </div>
@@ -312,6 +325,7 @@ const Admin = () => {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>Username</TableHead>
                   <TableHead>Balance</TableHead>
                   <TableHead>Invested</TableHead>
                   <TableHead>Profit</TableHead>
@@ -331,6 +345,7 @@ const Admin = () => {
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.full_name}</TableCell>
                       <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.username || '-'}</TableCell>
                       <TableCell>${financials.total_balance.toLocaleString()}</TableCell>
                       <TableCell>${financials.invested_amount.toLocaleString()}</TableCell>
                       <TableCell className="text-green-400">
