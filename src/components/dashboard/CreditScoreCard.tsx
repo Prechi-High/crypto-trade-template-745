@@ -54,7 +54,9 @@ export const CreditScoreCard = () => {
         
         <div className="text-center space-y-2">
           <p className="text-sm text-muted-foreground">Your credit score is average</p>
-          <p className="text-xs text-muted-foreground">Last Check on 21 Apr</p>
+          <p className="text-xs text-muted-foreground">
+            Last Check on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+          </p>
           <div className="flex items-center justify-center gap-1 text-green-400 text-sm">
             <span>+2.34%</span>
           </div>

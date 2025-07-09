@@ -59,50 +59,28 @@ const Dashboard = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center justify-between mb-8"
+          className="text-center mb-8"
         >
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome back, Ilona</h1>
-            <p className="text-muted-foreground">Here's a look at your performance and analytics.</p>
-          </div>
+          <motion.h1 
+            className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            Welcome back, Ilona
+          </motion.h1>
+          <p className="text-muted-foreground text-lg">Here's a look at your performance and analytics.</p>
           
-          <div className="flex items-center gap-4 mt-4 md:mt-0">
+          <div className="flex items-center justify-center gap-4 mt-6">
             <Button variant="outline" className="glass">
               <Calendar className="w-4 h-4 mr-2" />
-              January 2024 - May 2024
+              {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </Button>
             <Button className="bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30">
               <Plus className="w-4 h-4 mr-2" />
               Add new coin
             </Button>
           </div>
-        </motion.div>
-
-        {/* KYC Verification */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-8"
-        >
-          <Card className="glass bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-orange-500/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center">
-                    <span className="text-white text-xl">🔒</span>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-white">KYC Verification</h3>
-                    <p className="text-muted-foreground">Complete a simple KYC process.</p>
-                  </div>
-                </div>
-                <Button className="bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30">
-                  Complete now
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </motion.div>
 
         {/* Total Balance - Main Attraction */}
