@@ -78,41 +78,93 @@ const Dashboard = () => {
           </div>
         </motion.div>
 
+        {/* KYC Verification */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <Card className="glass bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-orange-500/20">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center">
+                    <span className="text-white text-xl">🔒</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">KYC Verification</h3>
+                    <p className="text-muted-foreground">Complete a simple KYC process.</p>
+                  </div>
+                </div>
+                <Button className="bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30">
+                  Complete now
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Total Balance - Main Attraction */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <Card className="glass bg-gradient-to-r from-primary/10 to-primary/20 border-primary/30">
+            <CardContent className="p-8 text-center">
+              <p className="text-muted-foreground text-lg mb-2">Total Portfolio Value</p>
+              <h2 className="text-5xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent mb-4">
+                $22,580.12
+              </h2>
+              <div className="flex items-center justify-center gap-2">
+                <TrendingUp className="w-5 h-5 text-green-400" />
+                <span className="text-green-400 text-lg font-medium">+12.9% Overall Gain</span>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Investment Breakdown */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
+        >
+          <Card className="glass">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <span className="text-blue-400 text-xl">$</span>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Amount Invested</p>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-white">$20,000.00</p>
+            </CardContent>
+          </Card>
+
+          <Card className="glass">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-green-400" />
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Investment Gain</p>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-green-400">$2,580.12</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Metrics and Chart */}
+          {/* Left Column - Chart */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Metrics Cards */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"
-            >
-              <MetricsCard
-                title="SPENT THIS MONTH"
-                value="$5,950.64"
-                change="+2.34%"
-                changeType="positive"
-              />
-              <MetricsCard
-                title="VOLUME (24H)"
-                value="$84.42B"
-                change="+2.34%"
-                changeType="positive"
-              />
-              <MetricsCard
-                title="MARKET CAP"
-                value="$804.42B"
-                change="+2.34%"
-                changeType="positive"
-              />
-              <MetricsCard
-                title="AVG MONTHLY GROWING"
-                value="$804.42B"
-                change="+2.34%"
-                changeType="positive"
-              />
-            </motion.div>
 
             {/* Active Credit Chart */}
             <motion.div
