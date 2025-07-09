@@ -1,8 +1,12 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 
-export const CreditScoreCard = () => {
-  const score = 660;
+interface CreditScoreCardProps {
+  creditScore?: number;
+}
+
+export const CreditScoreCard = ({ creditScore = 660 }: CreditScoreCardProps) => {
+  const score = creditScore;
   const percentage = 80;
   
   return (

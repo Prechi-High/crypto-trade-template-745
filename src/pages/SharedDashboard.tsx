@@ -1,16 +1,61 @@
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, Download, Plus, TrendingUp } from "lucide-react";
+import { Calendar, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import Navigation from "@/components/Navigation";
-import { MetricsCard } from "@/components/dashboard/MetricsCard";
+import { supabase } from "@/integrations/supabase/client";
 import { ActiveCreditChart } from "@/components/dashboard/ActiveCreditChart";
 import { CreditScoreCard } from "@/components/dashboard/CreditScoreCard";
 
-const Dashboard = () => {
+interface UserData {
+  full_name: string;
+  email: string;
+  user_financials: {
+    total_balance: number;
+    invested_amount: number;
+    profit_amount: number;
+    credit_score: number;
+  }[];
+}
+
+const SharedDashboard = () => {
+  const { shareToken } = useParams();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [shareToken]);
+
+  const fetchUserData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select(`
+          full_name,
+          email,
+          user_financials (
+            total_balance,
+            invested_amount,
+            profit_amount,
+            credit_score
+          )
+        `)
+        .eq('share_token', shareToken)
+        .single();
+
+      if (error) throw error;
+      setUserData(data);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const paymentHistory = [
     {
       name: "Achain",
@@ -50,11 +95,36 @@ const Dashboard = () => {
     }
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Dashboard not found</div>
+      </div>
+    );
+  }
+
+  const financials = userData.user_financials[0] || {
+    total_balance: 0,
+    invested_amount: 0,
+    profit_amount: 0,
+    credit_score: 660
+  };
+
+  const gainPercentage = financials.invested_amount > 0 
+    ? ((financials.profit_amount / financials.invested_amount) * 100).toFixed(1)
+    : "0.0";
+
   return (
     <div className="min-h-screen bg-black text-foreground">
-      <Navigation />
-      
-      <div className="container px-4 py-8 pt-24">
+      <div className="container px-4 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -67,7 +137,7 @@ const Dashboard = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            Welcome back, Ilona
+            Welcome back, {userData.full_name}
           </motion.h1>
           <p className="text-muted-foreground text-lg">Here's a look at your performance and analytics.</p>
           
@@ -75,10 +145,6 @@ const Dashboard = () => {
             <Button variant="outline" className="glass">
               <Calendar className="w-4 h-4 mr-2" />
               {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-            </Button>
-            <Button className="bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30">
-              <Plus className="w-4 h-4 mr-2" />
-              Add new coin
             </Button>
           </div>
         </motion.div>
@@ -94,11 +160,11 @@ const Dashboard = () => {
             <CardContent className="p-8 text-center">
               <p className="text-muted-foreground text-lg mb-2">Total Portfolio Value</p>
               <h2 className="text-5xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent mb-4">
-                $22,580.12
+                ${financials.total_balance.toLocaleString()}
               </h2>
               <div className="flex items-center justify-center gap-2">
                 <TrendingUp className="w-5 h-5 text-green-400" />
-                <span className="text-green-400 text-lg font-medium">+12.9% Overall Gain</span>
+                <span className="text-green-400 text-lg font-medium">+{gainPercentage}% Overall Gain</span>
               </div>
             </CardContent>
           </Card>
@@ -121,7 +187,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground">Amount Invested</p>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-white">$20,000.00</p>
+              <p className="text-3xl font-bold text-white">${financials.invested_amount.toLocaleString()}</p>
             </CardContent>
           </Card>
 
@@ -135,7 +201,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground">Investment Gain</p>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-green-400">$2,580.12</p>
+              <p className="text-3xl font-bold text-green-400">${financials.profit_amount.toLocaleString()}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -143,7 +209,6 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Chart */}
           <div className="lg:col-span-2 space-y-6">
-
             {/* Active Credit Chart */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -153,10 +218,6 @@ const Dashboard = () => {
               <Card className="glass">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Active credit</CardTitle>
-                  <Button variant="outline" size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Report
-                  </Button>
                 </CardHeader>
                 <CardContent>
                   <ActiveCreditChart />
@@ -173,7 +234,7 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <CreditScoreCard creditScore={660} />
+              <CreditScoreCard creditScore={financials.credit_score} />
             </motion.div>
 
             {/* Bitcoin Card */}
@@ -266,4 +327,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default SharedDashboard;

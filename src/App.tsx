@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import Auth from "./pages/Auth";
+import Admin from "./pages/Admin";
+import SharedDashboard from "./pages/SharedDashboard";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +21,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/shared/:shareToken" element={<SharedDashboard />} />
           </Routes>
         </BrowserRouter>
       </div>
