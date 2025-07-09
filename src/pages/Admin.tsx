@@ -81,13 +81,8 @@ const Admin = () => {
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch('/functions/v1/admin-create-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
+      const response = await supabase.functions.invoke('admin-create-user', {
+        body: {
           email: formData.email,
           password: formData.password,
           fullName: formData.fullName,
@@ -95,13 +90,11 @@ const Admin = () => {
           investedAmount: formData.investedAmount,
           profitAmount: formData.profitAmount,
           creditScore: formData.creditScore
-        })
+        }
       });
 
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to create user');
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to create user');
       }
 
       toast({
