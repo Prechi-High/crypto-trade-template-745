@@ -76,43 +76,33 @@ const Admin = () => {
 
   const createUser = async () => {
     try {
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: formData.email,
-        password: formData.password,
-        email_confirm: true
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await fetch('/functions/v1/admin-create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          totalBalance: formData.totalBalance,
+          investedAmount: formData.investedAmount,
+          profitAmount: formData.profitAmount,
+          creditScore: formData.creditScore
+        })
       });
 
-      if (authError) throw authError;
-
-      const { data: profileData, error: profileError } = await supabase
-        .from('user_profiles')
-        .insert({
-          user_id: authData.user.id,
-          full_name: formData.fullName,
-          email: formData.email,
-          created_by: (await supabase.auth.getUser()).data.user?.id
-        })
-        .select()
-        .single();
-
-      if (profileError) throw profileError;
-
-      await supabase
-        .from('user_financials')
-        .insert({
-          user_profile_id: profileData.id,
-          total_balance: parseFloat(formData.totalBalance) || 0,
-          invested_amount: parseFloat(formData.investedAmount) || 0,
-          profit_amount: parseFloat(formData.profitAmount) || 0,
-          credit_score: parseInt(formData.creditScore) || 660
-        });
-
-      await supabase
-        .from('user_roles')
-        .insert({
-          user_id: authData.user.id,
-          role: 'user'
-        });
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create user');
+      }
 
       toast({
         title: "Success",
