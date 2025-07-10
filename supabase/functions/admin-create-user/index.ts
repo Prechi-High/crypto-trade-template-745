@@ -66,6 +66,13 @@ serve(async (req) => {
       })
     }
 
+    // Get the current admin's profile ID for referral tracking
+    const { data: adminProfile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
     // Create user profile
     const { data: profileData, error: profileError } = await supabaseAdmin
       .from('user_profiles')
@@ -74,7 +81,8 @@ serve(async (req) => {
         full_name: fullName,
         email: email,
         username: username,
-        created_by: user.id
+        created_by: user.id,
+        referred_by: adminProfile?.id // Add referral tracking
       })
       .select()
       .single()

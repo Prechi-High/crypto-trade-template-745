@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get('ref');
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -53,22 +55,36 @@ const Auth = () => {
         });
         if (error) throw error;
       } else {
+        // Prepare signup data with referral if present
+        const signupData: any = {
+          full_name: fullName,
+          username: username,
+        };
+
+        // Add referral tracking if referral code exists
+        if (referralCode) {
+          signupData.referred_by = referralCode;
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              full_name: fullName,
-              username: username
-            }
-          }
+            emailRedirectTo: `${window.location.origin}/auth`,
+            data: signupData,
+          },
         });
         if (error) throw error;
         toast({
-          title: "Account created successfully!",
-          description: "You can now access your dashboard.",
+          title: "Success!",
+          description: "Check your email to confirm your account, then return here to login!",
         });
+        // Switch to login mode after successful signup
+        setIsLogin(true);
+        setEmail("");
+        setPassword("");
+        setFullName("");
+        setUsername("");
       }
     } catch (error: any) {
       toast({

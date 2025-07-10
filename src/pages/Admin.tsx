@@ -32,6 +32,7 @@ const Admin = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [adminProfile, setAdminProfile] = useState<any>(null);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -46,7 +47,26 @@ const Admin = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchAdminProfile();
   }, []);
+
+  const fetchAdminProfile = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, email')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (error) throw error;
+      setAdminProfile(data);
+    } catch (error: any) {
+      console.error('Error fetching admin profile:', error);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -186,6 +206,16 @@ const Admin = () => {
     });
   };
 
+  const copyReferralLink = () => {
+    if (!adminProfile) return;
+    const referralUrl = `${window.location.origin}/auth?ref=${adminProfile.id}`;
+    navigator.clipboard.writeText(referralUrl);
+    toast({
+      title: "Referral link copied",
+      description: "Your broker referral link has been copied to your clipboard"
+    });
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -315,9 +345,47 @@ const Admin = () => {
           </div>
         </motion.div>
 
+        {adminProfile && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-8"
+          >
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Your Broker Referral Link
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Label>Share this link to refer new users:</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Input
+                        readOnly
+                        value={`${window.location.origin}/auth?ref=${adminProfile.id}`}
+                        className="glass"
+                      />
+                      <Button onClick={copyReferralLink} variant="outline" className="glass">
+                        <ExternalLink className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Users who sign up with this link will appear in your dashboard and you can manage their financial data.
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         <Card className="glass">
           <CardHeader>
-            <CardTitle>Users Management</CardTitle>
+            <CardTitle>Your Referred Users</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>

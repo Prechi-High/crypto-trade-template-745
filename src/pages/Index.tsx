@@ -67,7 +67,7 @@ const Index = () => {
             className="flex flex-col sm:flex-row gap-4 items-start"
           >
             <Button size="lg" className="button-gradient" asChild>
-              <Link to="/dashboard">Start Trading Now</Link>
+              <Link to="/auth">Start Trading Now</Link>
             </Button>
             <Button size="lg" variant="link" className="text-white">
               View Markets <ArrowRight className="ml-2 w-4 h-4" />
@@ -132,7 +132,7 @@ const Index = () => {
             Join thousands of traders who have already discovered the power of our platform.
           </p>
           <Button size="lg" className="button-gradient" asChild>
-            <Link to="/dashboard">
+            <Link to="/auth">
               Create Account
               <ArrowRight className="ml-2 w-4 h-4" />
             </Link>

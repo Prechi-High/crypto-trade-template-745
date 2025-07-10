@@ -59,6 +59,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          referred_by: string | null
           share_token: string
           updated_at: string
           user_id: string
@@ -70,6 +71,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          referred_by?: string | null
           share_token?: string
           updated_at?: string
           user_id: string
@@ -81,12 +83,21 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          referred_by?: string | null
           share_token?: string
           updated_at?: string
           user_id?: string
           username?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
