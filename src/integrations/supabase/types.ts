@@ -122,11 +122,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_current_user_profile_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_referred_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          profile_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _user_id: string
           _role: Database["public"]["Enums"]["user_role"]
         }
+        Returns: boolean
+      }
+      is_super_admin: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
     }
