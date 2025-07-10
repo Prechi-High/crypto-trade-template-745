@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Calendar, Download, Plus, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +11,55 @@ import Navigation from "@/components/Navigation";
 import { MetricsCard } from "@/components/dashboard/MetricsCard";
 import { ActiveCreditChart } from "@/components/dashboard/ActiveCreditChart";
 import { CreditScoreCard } from "@/components/dashboard/CreditScoreCard";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
+  const [user, setUser] = useState<any>(null);
+  const [userFinancials, setUserFinancials] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        navigate('/auth');
+        return;
+      }
+
+      setUser(session.user);
+
+      // Fetch user profile and financials
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select(`
+          *,
+          user_financials (*)
+        `)
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (profileData?.user_financials?.[0]) {
+        setUserFinancials(profileData.user_financials[0]);
+      }
+      
+      setLoading(false);
+    };
+
+    checkUser();
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
   const paymentHistory = [
     {
       name: "Achain",
@@ -67,7 +116,7 @@ const Dashboard = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            Welcome back, Ilona
+            Welcome back, {user?.user_metadata?.full_name || user?.email}
           </motion.h1>
           <p className="text-muted-foreground text-lg">Here's a look at your performance and analytics.</p>
           
@@ -94,7 +143,7 @@ const Dashboard = () => {
             <CardContent className="p-8 text-center">
               <p className="text-muted-foreground text-lg mb-2">Total Portfolio Value</p>
               <h2 className="text-5xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent mb-4">
-                $22,580.12
+                ${userFinancials?.total_balance || '0.00'}
               </h2>
               <div className="flex items-center justify-center gap-2">
                 <TrendingUp className="w-5 h-5 text-green-400" />
@@ -121,7 +170,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground">Amount Invested</p>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-white">$20,000.00</p>
+              <p className="text-3xl font-bold text-white">${userFinancials?.invested_amount || '0.00'}</p>
             </CardContent>
           </Card>
 
@@ -135,7 +184,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground">Investment Gain</p>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-green-400">$2,580.12</p>
+              <p className="text-3xl font-bold text-green-400">${userFinancials?.profit_amount || '0.00'}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -173,7 +222,7 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <CreditScoreCard creditScore={660} />
+              <CreditScoreCard creditScore={userFinancials?.credit_score || 660} />
             </motion.div>
 
             {/* Bitcoin Card */}
