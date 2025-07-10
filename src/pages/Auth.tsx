@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,21 +22,51 @@ const Auth = () => {
   const referralCode = searchParams.get('ref');
 
   useEffect(() => {
+    // Check if user is already authenticated on component mount
+    const checkAuthStatus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        // User is already logged in, redirect them
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (roleData?.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
+      }
+    };
+
+    checkAuthStatus();
+
+    // Set up auth state listener but don't auto-redirect during auth operations
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user) {
-          // Check if user is admin
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .single();
+        // Only redirect on successful sign in, not on all auth state changes
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Small delay to prevent race conditions
+          setTimeout(async () => {
+            try {
+              const { data: roleData } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', session.user.id)
+                .single();
 
-          if (roleData?.role === 'admin') {
-            navigate('/admin');
-          } else {
-            navigate('/dashboard');
-          }
+              if (roleData?.role === 'admin') {
+                navigate('/admin');
+              } else {
+                navigate('/dashboard');
+              }
+            } catch (error) {
+              console.error('Error checking user role:', error);
+              navigate('/dashboard');
+            }
+          }, 100);
         }
       }
     );
@@ -54,6 +85,7 @@ const Auth = () => {
           password,
         });
         if (error) throw error;
+        // Navigation will be handled by the auth state listener
       } else {
         // Prepare signup data with referral if present
         const signupData: any = {
