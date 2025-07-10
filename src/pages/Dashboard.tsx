@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [userFinancials, setUserFinancials] = useState<any>(null);
+  const [userTransactions, setUserTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -43,18 +44,25 @@ const Dashboard = () => {
       // User is regular user, set up dashboard
       setUser(session.user);
 
-      // Fetch financials
+      // Fetch financials and transactions
       const { data: profileData } = await supabase
         .from('user_profiles')
         .select(`
           *,
-          user_financials (*)
+          user_financials (*),
+          user_transactions (*)
         `)
         .eq('user_id', session.user.id)
         .single();
 
       if (profileData?.user_financials?.[0]) {
         setUserFinancials(profileData.user_financials[0]);
+      }
+
+      if (profileData?.user_transactions) {
+        setUserTransactions(profileData.user_transactions.sort((a, b) => 
+          new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
+        ));
       }
       
       setLoading(false);
@@ -71,44 +79,25 @@ const Dashboard = () => {
     );
   }
 
-  const paymentHistory = [
-    {
-      name: "Achain",
-      icon: "🔗",
-      date: "12 Jun, 2024",
-      price: "$1,492.33",
-      status: "Successfully",
-      change: "-8.43%",
-      changeType: "negative"
-    },
-    {
-      name: "Cardano",
-      icon: "🔷",
-      date: "16 May, 2024", 
-      price: "$2,432.90",
-      status: "Successfully",
-      change: "+2.34%",
-      changeType: "positive"
-    },
-    {
-      name: "Digibyte",
-      icon: "💎",
-      date: "21 Feb, 2024",
-      price: "$202.43",
-      status: "Successfully", 
-      change: "+16.84",
-      changeType: "positive"
-    },
-    {
-      name: "Ethereum",
-      icon: "⟁",
-      date: "19 Des, 2023",
-      price: "$3,491.22",
-      status: "Successfully",
-      change: "-34.34%",
-      changeType: "negative"
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case 'deposit': return '💰';
+      case 'withdrawal': return '💸';
+      case 'investment': return '📈';
+      case 'profit': return '🎯';
+      default: return '💳';
     }
-  ];
+  };
+
+  const getTransactionTypeColor = (type: string) => {
+    switch (type) {
+      case 'deposit': return 'text-green-400';
+      case 'withdrawal': return 'text-red-400';
+      case 'investment': return 'text-blue-400';
+      case 'profit': return 'text-green-400';
+      default: return 'text-muted-foreground';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-foreground">
@@ -269,7 +258,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Payment History */}
+        {/* Transaction History */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -278,45 +267,58 @@ const Dashboard = () => {
         >
           <Card className="glass">
             <CardHeader>
-              <CardTitle>Payment History</CardTitle>
+              <CardTitle>Transaction History</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>NAME</TableHead>
-                    <TableHead>DATE</TableHead>
-                    <TableHead>PRICE</TableHead>
-                    <TableHead>STATUS</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paymentHistory.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">{item.icon}</span>
-                          <div>
-                            <p className="font-medium">{item.name}</p>
-                            <p className={`text-sm ${
-                              item.changeType === 'positive' ? 'text-green-400' : 'text-red-400'
-                            }`}>
-                              {item.change}
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{item.date}</TableCell>
-                      <TableCell className="font-medium">{item.price}</TableCell>
-                      <TableCell>
-                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                          {item.status}
-                        </Badge>
-                      </TableCell>
+              {userTransactions.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>TYPE</TableHead>
+                      <TableHead>DATE</TableHead>
+                      <TableHead>AMOUNT</TableHead>
+                      <TableHead>STATUS</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {userTransactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{getTransactionIcon(transaction.transaction_type)}</span>
+                            <div>
+                              <p className="font-medium capitalize">{transaction.transaction_type}</p>
+                              {transaction.description && (
+                                <p className="text-sm text-muted-foreground">{transaction.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(transaction.transaction_date).toLocaleDateString('en-US', { 
+                            day: '2-digit', 
+                            month: 'short', 
+                            year: 'numeric' 
+                          })}
+                        </TableCell>
+                        <TableCell className={`font-medium ${getTransactionTypeColor(transaction.transaction_type)}`}>
+                          {transaction.transaction_type === 'withdrawal' ? '-' : '+'}${Math.abs(transaction.amount).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 capitalize">
+                            {transaction.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No transactions yet</p>
+                  <p className="text-sm mt-2">Your transaction history will appear here once you make your first transaction.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

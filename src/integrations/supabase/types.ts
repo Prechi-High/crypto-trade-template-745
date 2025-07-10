@@ -120,6 +120,53 @@ export type Database = {
         }
         Relationships: []
       }
+      user_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          status: string
+          transaction_date: string
+          transaction_type: string
+          updated_at: string
+          user_profile_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          status?: string
+          transaction_date?: string
+          transaction_type: string
+          updated_at?: string
+          user_profile_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          status?: string
+          transaction_date?: string
+          transaction_type?: string
+          updated_at?: string
+          user_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_transactions_user_profile_id_fkey"
+            columns: ["user_profile_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

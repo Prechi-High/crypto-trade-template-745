@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Plus, ExternalLink, LogOut, DollarSign, TrendingUp } from "lucide-react";
+import { Plus, ExternalLink, LogOut, DollarSign, TrendingUp, Edit, Save, X, Receipt } from "lucide-react";
 import Navigation from "@/components/Navigation";
 
 interface UserProfile {
@@ -31,8 +32,11 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [adminProfile, setAdminProfile] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<any>({});
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -42,6 +46,11 @@ const Admin = () => {
     investedAmount: "",
     profitAmount: "",
     creditScore: "660"
+  });
+  const [transactionData, setTransactionData] = useState({
+    type: "",
+    amount: "",
+    description: ""
   });
   const { toast } = useToast();
 
@@ -198,6 +207,81 @@ const Admin = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const startEditing = (userId: string, currentValues: any) => {
+    setEditingUser(userId);
+    setEditValues(currentValues);
+  };
+
+  const cancelEditing = () => {
+    setEditingUser(null);
+    setEditValues({});
+  };
+
+  const saveInlineEdit = async (userId: string) => {
+    try {
+      await supabase
+        .from('user_financials')
+        .update({
+          total_balance: parseFloat(editValues.total_balance || 0),
+          invested_amount: parseFloat(editValues.invested_amount || 0),
+          profit_amount: parseFloat(editValues.profit_amount || 0),
+          credit_score: parseInt(editValues.credit_score || 660)
+        })
+        .eq('user_profile_id', userId);
+
+      toast({
+        title: "Success",
+        description: "Financial data updated successfully"
+      });
+
+      setEditingUser(null);
+      setEditValues({});
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const addTransaction = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await supabase
+        .from('user_transactions')
+        .insert({
+          user_profile_id: selectedUser.id,
+          transaction_type: transactionData.type,
+          amount: parseFloat(transactionData.amount),
+          description: transactionData.description,
+          status: 'completed'
+        });
+
+      toast({
+        title: "Success",
+        description: "Transaction added successfully"
+      });
+
+      setShowTransactionModal(false);
+      setTransactionData({ type: "", amount: "", description: "" });
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openTransactionModal = (user: UserProfile) => {
+    setSelectedUser(user);
+    setShowTransactionModal(true);
   };
 
   const openEditModal = (user: UserProfile) => {
@@ -473,35 +557,111 @@ const Admin = () => {
                     profit_amount: 0,
                     credit_score: 660
                   };
+                  const isEditing = editingUser === user.id;
                   return (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.full_name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.username || '-'}</TableCell>
-                      <TableCell>${financials.total_balance.toLocaleString()}</TableCell>
-                      <TableCell>${financials.invested_amount.toLocaleString()}</TableCell>
-                      <TableCell className="text-green-400">
-                        ${financials.profit_amount.toLocaleString()}
-                      </TableCell>
-                      <TableCell>{financials.credit_score}</TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openEditModal(user)}
-                            className="glass"
-                          >
-                            <DollarSign className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => copyShareLink(user.share_token)}
-                            className="glass"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </Button>
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={editValues.total_balance || financials.total_balance}
+                            onChange={(e) => setEditValues(prev => ({...prev, total_balance: e.target.value}))}
+                            className="w-24 h-8"
+                          />
+                        ) : (
+                          `$${financials.total_balance.toLocaleString()}`
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={editValues.invested_amount || financials.invested_amount}
+                            onChange={(e) => setEditValues(prev => ({...prev, invested_amount: e.target.value}))}
+                            className="w-24 h-8"
+                          />
+                        ) : (
+                          `$${financials.invested_amount.toLocaleString()}`
+                        )}
+                      </TableCell>
+                      <TableCell className="text-green-400">
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={editValues.profit_amount || financials.profit_amount}
+                            onChange={(e) => setEditValues(prev => ({...prev, profit_amount: e.target.value}))}
+                            className="w-24 h-8"
+                          />
+                        ) : (
+                          `$${financials.profit_amount.toLocaleString()}`
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            value={editValues.credit_score || financials.credit_score}
+                            onChange={(e) => setEditValues(prev => ({...prev, credit_score: e.target.value}))}
+                            className="w-20 h-8"
+                          />
+                        ) : (
+                          financials.credit_score
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {isEditing ? (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => saveInlineEdit(user.id)}
+                                className="h-8 w-8 p-0 bg-green-600 hover:bg-green-700"
+                              >
+                                <Save className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={cancelEditing}
+                                className="h-8 w-8 p-0"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => startEditing(user.id, financials)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openTransactionModal(user)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Receipt className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => copyShareLink(user.share_token)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -563,6 +723,53 @@ const Admin = () => {
               </div>
               <Button onClick={updateFinancials} className="w-full">
                 Update Financial Data
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showTransactionModal} onOpenChange={setShowTransactionModal}>
+          <DialogContent className="glass">
+            <DialogHeader>
+              <DialogTitle>Add Transaction - {selectedUser?.full_name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Transaction Type</Label>
+                <Select value={transactionData.type} onValueChange={(value) => setTransactionData(prev => ({...prev, type: value}))}>
+                  <SelectTrigger className="glass">
+                    <SelectValue placeholder="Select transaction type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="deposit">Deposit</SelectItem>
+                    <SelectItem value="withdrawal">Withdrawal</SelectItem>
+                    <SelectItem value="investment">Investment</SelectItem>
+                    <SelectItem value="profit">Profit</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Amount</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={transactionData.amount}
+                  onChange={(e) => setTransactionData(prev => ({...prev, amount: e.target.value}))}
+                  className="glass"
+                  placeholder="Enter amount"
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Input
+                  value={transactionData.description}
+                  onChange={(e) => setTransactionData(prev => ({...prev, description: e.target.value}))}
+                  className="glass"
+                  placeholder="Transaction description"
+                />
+              </div>
+              <Button onClick={addTransaction} className="w-full" disabled={!transactionData.type || !transactionData.amount}>
+                Add Transaction
               </Button>
             </div>
           </DialogContent>
