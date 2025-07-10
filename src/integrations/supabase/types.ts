@@ -59,6 +59,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_admin: boolean
           referred_by: string | null
           share_token: string
           updated_at: string
@@ -71,6 +72,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          is_admin?: boolean
           referred_by?: string | null
           share_token?: string
           updated_at?: string
@@ -83,6 +85,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          is_admin?: boolean
           referred_by?: string | null
           share_token?: string
           updated_at?: string

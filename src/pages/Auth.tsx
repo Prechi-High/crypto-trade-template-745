@@ -35,22 +35,15 @@ const Auth = () => {
         
         // Check if user is admin and redirect accordingly
         if (data.user) {
-          // Check user role
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
+          // Get user profile to check is_admin and share_token
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('is_admin, share_token')
             .eq('user_id', data.user.id)
             .single();
           
-          if (roleData?.role === 'admin') {
-            // Get user profile to get share token
-            const { data: profileData } = await supabase
-              .from('user_profiles')
-              .select('share_token')
-              .eq('user_id', data.user.id)
-              .single();
-            
-            if (profileData?.share_token) {
+          if (profileData?.is_admin === true) {
+            if (profileData.share_token) {
               window.location.href = `/admin/${profileData.share_token}`;
             } else {
               window.location.href = '/admin';
