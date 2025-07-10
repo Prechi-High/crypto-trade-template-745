@@ -81,7 +81,7 @@ const Admin = () => {
 
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, full_name, email')
+        .select('id, full_name, email, share_token')
         .eq('user_id', session.user.id)
         .single();
 
@@ -240,6 +240,17 @@ const Admin = () => {
     });
   };
 
+  const copyPersonalizedAdminLink = () => {
+    if (!adminProfile) return;
+    // Get the admin's share token for their personalized admin page
+    const adminUrl = `${window.location.origin}/admin/${adminProfile.share_token || adminProfile.id}`;
+    navigator.clipboard.writeText(adminUrl);
+    toast({
+      title: "Personalized admin link copied",
+      description: "Your personalized admin dashboard link has been copied to your clipboard"
+    });
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -374,13 +385,13 @@ const Admin = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mb-8"
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
           >
             <Card className="glass">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
-                  Your Broker Referral Link
+                  Your Referral Link
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -400,7 +411,36 @@ const Admin = () => {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Users who sign up with this link will appear in your dashboard and you can manage their financial data.
+                  Users who sign up with this link will appear in your dashboard.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ExternalLink className="w-5 h-5" />
+                  Your Personalized Admin Page
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Label>Your personal admin dashboard:</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Input
+                        readOnly
+                        value={`${window.location.origin}/admin/${adminProfile.share_token}`}
+                        className="glass"
+                      />
+                      <Button onClick={copyPersonalizedAdminLink} variant="outline" className="glass">
+                        <ExternalLink className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Share this link to show others your admin dashboard with your referred users.
                 </p>
               </CardContent>
             </Card>

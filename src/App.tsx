@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import SharedDashboard from "./pages/SharedDashboard";
+import PersonalizedAdmin from "./pages/PersonalizedAdmin";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/:shareToken" element={<PersonalizedAdmin />} />
             <Route path="/shared/:shareToken" element={<SharedDashboard />} />
           </Routes>
         </BrowserRouter>
