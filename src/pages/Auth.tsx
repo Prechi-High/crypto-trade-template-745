@@ -22,17 +22,17 @@ const Auth = () => {
   const referralCode = searchParams.get('ref');
 
   useEffect(() => {
-    // Check if user is already authenticated on component mount
-    const checkAuthStatus = async () => {
+    const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // User is already logged in, redirect them
+        // Check if user is admin
         const { data: roleData } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', session.user.id)
           .single();
 
+        // Redirect based on role
         if (roleData?.role === 'admin') {
           navigate('/admin');
         } else {
@@ -41,37 +41,7 @@ const Auth = () => {
       }
     };
 
-    checkAuthStatus();
-
-    // Set up auth state listener but don't auto-redirect during auth operations
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // Only redirect on successful sign in, not on all auth state changes
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Small delay to prevent race conditions
-          setTimeout(async () => {
-            try {
-              const { data: roleData } = await supabase
-                .from('user_roles')
-                .select('role')
-                .eq('user_id', session.user.id)
-                .single();
-
-              if (roleData?.role === 'admin') {
-                navigate('/admin');
-              } else {
-                navigate('/dashboard');
-              }
-            } catch (error) {
-              console.error('Error checking user role:', error);
-              navigate('/dashboard');
-            }
-          }, 100);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
+    checkUser();
   }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -80,12 +50,26 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-        // Navigation will be handled by the auth state listener
+        
+        if (data.user) {
+          // Check role and redirect
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id)
+            .single();
+
+          if (roleData?.role === 'admin') {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
+        }
       } else {
         // Prepare signup data with referral if present
         const signupData: any = {

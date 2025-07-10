@@ -5,22 +5,18 @@ import { useNavigate } from "react-router-dom";
 import { Calendar, Download, Plus, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
-import { MetricsCard } from "@/components/dashboard/MetricsCard";
 import { ActiveCreditChart } from "@/components/dashboard/ActiveCreditChart";
 import { CreditScoreCard } from "@/components/dashboard/CreditScoreCard";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [userFinancials, setUserFinancials] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     const checkUser = async () => {
@@ -28,6 +24,18 @@ const Dashboard = () => {
       
       if (!session?.user) {
         navigate('/auth');
+        return;
+      }
+
+      // Check if user is admin - admins should not access regular dashboard
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (roleData?.role === 'admin') {
+        navigate('/admin');
         return;
       }
 
@@ -193,7 +201,6 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Chart */}
           <div className="lg:col-span-2 space-y-6">
-
             {/* Active Credit Chart */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
