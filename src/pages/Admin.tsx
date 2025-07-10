@@ -46,8 +46,32 @@ const Admin = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchUsers();
-    fetchAdminProfile();
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        window.location.href = '/auth';
+        return;
+      }
+
+      // Check admin role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (roleData?.role !== 'admin') {
+        window.location.href = '/dashboard';
+        return;
+      }
+
+      // Load admin data
+      await fetchAdminProfile();
+      await fetchUsers();
+    };
+
+    checkAuth();
   }, []);
 
   const fetchAdminProfile = async () => {

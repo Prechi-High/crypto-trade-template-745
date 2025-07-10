@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,33 +16,9 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Check if user is admin
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-
-        // Redirect based on role
-        if (roleData?.role === 'admin') {
-          navigate('/admin');
-        } else {
-          navigate('/dashboard');
-        }
-      }
-    };
-
-    checkUser();
-  }, [navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,34 +26,22 @@ const Auth = () => {
 
     try {
       if (isLogin) {
+        // Sign in
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
         
-        if (data.user) {
-          // Check role and redirect
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', data.user.id)
-            .single();
-
-          if (roleData?.role === 'admin') {
-            navigate('/admin');
-          } else {
-            navigate('/dashboard');
-          }
-        }
+        // Direct redirect after successful login
+        window.location.href = '/dashboard';
       } else {
-        // Prepare signup data with referral if present
+        // Sign up
         const signupData: any = {
           full_name: fullName,
           username: username,
         };
 
-        // Add referral tracking if referral code exists
         if (referralCode) {
           signupData.referred_by = referralCode;
         }
@@ -91,11 +55,12 @@ const Auth = () => {
           },
         });
         if (error) throw error;
+        
         toast({
           title: "Success!",
           description: "Check your email to confirm your account, then return here to login!",
         });
-        // Switch to login mode after successful signup
+        
         setIsLogin(true);
         setEmail("");
         setPassword("");

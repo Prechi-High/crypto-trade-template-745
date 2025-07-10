@@ -19,29 +19,31 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkUser = async () => {
+    const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
-        navigate('/auth');
+        window.location.href = '/auth';
         return;
       }
 
-      // Check if user is admin - admins should not access regular dashboard
+      // Check role first
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', session.user.id)
         .single();
 
+      // If admin, redirect to admin page
       if (roleData?.role === 'admin') {
-        navigate('/admin');
+        window.location.href = '/admin';
         return;
       }
 
+      // User is regular user, set up dashboard
       setUser(session.user);
 
-      // Fetch user profile and financials
+      // Fetch financials
       const { data: profileData } = await supabase
         .from('user_profiles')
         .select(`
@@ -58,8 +60,8 @@ const Dashboard = () => {
       setLoading(false);
     };
 
-    checkUser();
-  }, [navigate]);
+    checkAuth();
+  }, []);
 
   if (loading) {
     return (
