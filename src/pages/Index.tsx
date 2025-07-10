@@ -35,7 +35,7 @@ const Index = () => {
         >
           <span className="text-sm font-medium">
             <Command className="w-4 h-4 inline-block mr-2" />
-            Next-gen crypto trading platform
+            Next-gen crypto Hacking platform
           </span>
         </motion.div>
         
