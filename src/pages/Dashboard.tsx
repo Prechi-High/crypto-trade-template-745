@@ -30,6 +30,17 @@ const Dashboard = () => {
         return;
       }
 
+      // Check if user is admin and redirect accordingly
+      const { data: isAdmin } = await supabase.rpc('has_role', {
+        _user_id: session.user.id,
+        _role: 'admin'
+      });
+
+      if (isAdmin) {
+        navigate('/admin');
+        return;
+      }
+
       setUser(session.user);
 
       // Fetch user profile and financials
